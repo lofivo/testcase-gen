@@ -1,6 +1,8 @@
 # testcase-gen
 
-面向**信息学奥赛（OI）出题**的 Claude Code skill：给定题面 markdown 与标程 `std.cpp`，自动生成一套覆盖数据范围、特殊性质与边界坑点、且能击败错解的**标准数据包**。
+面向**信息学奥赛（OI）出题**的 agent skill：给定题面 markdown 与标程 `std.cpp`，自动生成一套覆盖数据范围、特殊性质与边界坑点、且能击败错解的**标准数据包**。
+
+> 本 skill 遵循 **SKILL.md 开放格式**：一个目录 + 一个 `SKILL.md`（frontmatter `name` / `description`）+ 支撑文件。核心资产（模板、脚本、规范、vendored testlib）与具体 agent 无关，**一处开发、多端安装**。
 
 ## 它做什么
 
@@ -28,15 +30,54 @@
 
 ## 安装
 
-把本目录软链到 Claude Code 的全局 skill 目录：
+### 通用说明
+
+- skill 名为 `testcase-gen`，目录名与其一致，符合各 agent 的命名约束。
+- 安装就是**把整个目录放进 agent 的 skills 目录**，支撑文件（`templates/`、`scripts/`、`references/`、`vendor/`）随之就位，无需单独处理。
+- **开发调试用软链**（改一处、处处生效），**分发用复制/克隆**（自包含）。
+- 需要 g++（本机已确认 g++ 14.x）；testlib 已 vendor 在 `vendor/testlib.h`，无需额外安装。
+
+### Claude Code
 
 ```bash
+# 全局
+mkdir -p "$HOME/.claude/skills"
 ln -s "$HOME/Repository/testcase-gen" "$HOME/.claude/skills/testcase-gen"
+
+# 项目级（仅某仓库可用）
+ln -s "$HOME/Repository/testcase-gen" "<repo>/.claude/skills/testcase-gen"
 ```
 
-安装后即可用 `/testcase-gen` 触发，或直接说「帮我出数据 / 造测点 / 生成测试数据」。
+触发：`/testcase-gen`，或自然语言「帮我出数据 / 造测点 / 生成测试数据」。
 
-> 需要 g++（本机已确认 g++ 14.x）。testlib 已作为单头文件 vendor 在 `vendor/testlib.h`，无需额外安装。
+### Codex
+
+```bash
+# 全局（Codex 递归扫描 ~/.codex/skills/**/SKILL.md）
+mkdir -p "$HOME/.codex/skills"
+ln -s "$HOME/Repository/testcase-gen" "$HOME/.codex/skills/testcase-gen"
+```
+
+触发：由 `name` / `description` 自动匹配，在对话中说明任务即可被加载。Codex 目前以全局 `~/.codex/skills/` 为主（见[官方文档](https://github.com/openai/codex/blob/main/docs/skills.md)）。
+
+### OpenCode
+
+```bash
+# 全局（也兼容 ~/.claude/skills/、~/.agents/skills/）
+ln -s "$HOME/Repository/testcase-gen" "$HOME/.config/opencode/skills/testcase-gen"
+
+# 项目级（也兼容 .claude/skills/、.agents/skills/）
+ln -s "$HOME/Repository/testcase-gen" "<repo>/.opencode/skills/testcase-gen"
+```
+
+触发：由 `description` 自动触发。
+
+### 兼容性
+
+三个 agent 都采用 `SKILL.md` + `name` / `description` 这两个必填字段，本 skill 的 frontmatter 三处通用：
+
+- **OpenCode** 额外识别 `license` / `compatibility` / `metadata`（均可选，本 skill 未用，不影响加载）。
+- **Codex** 忽略未知 frontmatter 字段。
 
 ## 快速开始
 
