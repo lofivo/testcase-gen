@@ -37,7 +37,7 @@ CONTEXT.md、docs/adr/       词汇表与决策记录
 
 ## 前置检查
 
-1. `g++` 可用（已确认本机有 g++ 14.x）；`vendor/testlib.h` 存在。
+1. `g++` 可用；`vendor/testlib.h` 存在。
 2. 题目工作目录里 `problem.md` 与 `std.cpp` 齐全；`wrong/` 可选。
 
 ## 流程（严格按序执行）
