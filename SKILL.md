@@ -19,7 +19,9 @@ description: 给定题目 markdown 题面与 C++ 标程 std.cpp，生成信息�
 problem.md          题面
 std.cpp             标程（正确解，标准答案 out 的唯一来源）
 wrong/              可选：错解目录，所有 .cpp 都要被数据击败（暴力放 bf.cpp）
-data/               产物：1.in…N.out + README.md + verify-report.md
+data/               测点：1.in…N.out
+README.md           测点说明（产物，见流程 11，位于题目根目录）
+verify-report.md    错解自检报告（产物，由 verify.sh 生成，位于题目根目录）
 work/               中间：gen/validator/checker 源码 + testlib.h + bin/
 ```
 
@@ -58,7 +60,7 @@ CONTEXT.md、docs/adr/       词汇表与决策记录
 
 - **有测试点表**：严格按表映射。每个编号（或编号组）→ 上限 + 特殊性质，逐点列出。表里带性质的满 `n` 点（如例中 `6,7` 性质 A）照性质生成，别丢性质。
 - **无表**：按 `references/pitfall-checklist.md` 逐类设点，约 10–20 个；小数据覆盖边界/易错分支，大数据覆盖最坏复杂度。
-- 每个测点记录：编号 / 上限 / 性质 / 针对的坑 / 预期复杂度。这份记录就是后面 `data/README.md` 的底稿。
+- 每个测点记录：编号 / 上限 / 性质 / 针对的坑 / 预期复杂度。这份记录就是后面题目根目录下 `README.md` 的底稿。
 
 ### 4. 准备 work/
 
@@ -91,11 +93,11 @@ bash <skill>/scripts/verify.sh <N> [TL_ms]
 - `N` = 测点总数。
 - `TL_ms` = 单点时限（毫秒），取题面声明时限，无则默认 2000。它决定错解是否被判 TLE。
 
-这一步产出 `data/1.in…N.out` 和 `data/verify-report.md`，并在 stdout 打印每个错解的 AC/WA/TLE/RE 与「是否被击败」。
+这一步产出 `data/1.in…N.out` 和题目根目录的 `verify-report.md`，并在 stdout 打印每个错解的 AC/WA/TLE/RE 与「是否被击败」。
 
 ### 9. 加固（循环，直到达标）
 
-读 `data/verify-report.md`：
+读题目根目录的 `verify-report.md`：
 - 有错解**未被击败**（全部 AC）→ 数据太弱，必须加固：
   - 错解是**假算法**（应被 WA）：读该错解代码，定位它错在哪一步（贪心/特判/漏情况），按 `references/pitfall-checklist.md` 构造能戳穿它的数据，新增或替换测点。
   - 错解是**暴力**（应被 TLE）：按 `references/anti-brute-force.md` 加大规模或加强对抗性构造。
@@ -107,16 +109,16 @@ bash <skill>/scripts/verify.sh <N> [TL_ms]
 
 对每个「性质组」的 `.in` 人工抽查：确认输入**确实满足**该性质、且落在范围与格式内。这是最容易翻车的一步，务必逐组核对。
 
-### 11. 写 data/README.md
+### 11. 写 README.md
 
-在 `data/README.md` 汇总（底稿来自第 3 步的记录）：
+在题目根目录的 `README.md` 汇总（底稿来自第 3 步的记录）：
 - 每个测点：编号 / 变量上限 / 特殊性质 / 针对的坑 / 预期复杂度。
 - 错解自检摘要（来自 `verify-report.md`）：每个错解被哪些点、以何种方式（WA/TLE/RE）击败。
 
 ### 12. 交付
 
 向用户报告：
-- 产物清单：`data/1.in…N.out`、`data/README.md`、`data/verify-report.md`。
+- 产物清单：`data/1.in…N.out`、题目根目录的 `README.md`、`verify-report.md`。
 - 自检结果：每个错解是否被击败、以何种方式。
 - 生成中发现的题面/标程疑点（若有）。
 

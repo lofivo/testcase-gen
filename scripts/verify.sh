@@ -2,7 +2,7 @@
 # ============ 测点生成 + 错解自检 ============
 # 在题目工作目录运行（cwd = 题目目录）。前置：已运行 build.sh。
 # 用法：  verify.sh <测试点数量 N> [时间上限_ms，默认 2000]
-# 产出：  data/1.in..N.in、data/1.out..N.out、data/verify-report.md
+# 产出：  data/1.in..N.in、data/1.out..N.out、verify-report.md（题目根目录）
 #
 # 判定口径（见 docs/adr/0001）：
 #   - 一个错解只要在任一测点非 AC（WA/TLE/RE）即「被击败」。
@@ -38,7 +38,7 @@ if [ ! -d "$WRONG" ] || [ -z "$(ls -A "$WRONG" 2>/dev/null)" ]; then
     echo "# 错解自检报告"
     echo
     echo "（无错解，跳过错解自检。）"
-  } > "$DATA/verify-report.md"
+  } > "verify-report.md"
   exit 0
 fi
 
@@ -46,7 +46,7 @@ fi
 SEC=$(( (TL + 999) / 1000 ))
 [ "$SEC" -lt 1 ] && SEC=1
 
-REPORT="$DATA/verify-report.md"
+REPORT="verify-report.md"
 {
   echo "# 错解自检报告"
   echo

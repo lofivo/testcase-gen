@@ -17,8 +17,8 @@
 | 输出 | 说明 |
 | --- | --- |
 | `data/1.in … data/N.out` | 测点 |
-| `data/README.md` | 每个测点的编号/上限/性质/针对的坑 |
-| `data/verify-report.md` | 错解自检报告（AC/WA/TLE/RE） |
+| `README.md` | 每个测点的编号/上限/性质/针对的坑 |
+| `verify-report.md` | 错解自检报告（AC/WA/TLE/RE） |
 
 核心能力：
 
@@ -88,7 +88,9 @@ ln -s "$HOME/Repository/testcase-gen" "<repo>/.opencode/skills/testcase-gen"
 └── wrong/           可选：bf.cpp、贪心错解等（都会被自检并加固）
 
 # 在题目目录下触发 skill，按指引跑完流程后得到：
-├── data/            1.in … N.out + README.md + verify-report.md
+├── data/            1.in … N.out
+├── README.md        测点说明（编号/上限/性质/针对的坑）
+├── verify-report.md 错解自检报告
 └── work/            gen/validator/checker 源码、testlib.h、bin/
 ```
 
