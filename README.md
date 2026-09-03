@@ -1,6 +1,6 @@
 # testcase-gen
 
-面向**信息学奥赛（OI）出题**的 agent skill：给定题面 markdown 与标程 `std.cpp`，自动生成一套覆盖数据范围、特殊性质与边界坑点、且能击败错解的**标准数据包**。
+面向**信息学奥赛（OI）**场景的测点生成 agent skill：给定题面 markdown 与标程 `std.cpp`，自动生成一套覆盖数据范围、特殊性质与边界坑点、且能击败错解的**测点**。
 
 > 本 skill 遵循 **SKILL.md 开放格式**：一个目录 + 一个 `SKILL.md`（frontmatter `name` / `description`）+ 支撑文件。核心资产（模板、脚本、规范、vendored testlib）与具体 agent 无关，**一处开发、多端安装**。
 
@@ -16,7 +16,7 @@
 
 | 输出 | 说明 |
 | --- | --- |
-| `data/1.in … data/N.out` | Luogu 风格数据包 |
+| `data/1.in … data/N.out` | 测点 |
 | `data/README.md` | 每个测点的编号/上限/性质/针对的坑 |
 | `data/verify-report.md` | 错解自检报告（AC/WA/TLE/RE） |
 
@@ -35,7 +35,7 @@
 - skill 名为 `testcase-gen`，目录名与其一致，符合各 agent 的命名约束。
 - 安装就是**把整个目录放进 agent 的 skills 目录**，支撑文件（`templates/`、`scripts/`、`references/`、`vendor/`）随之就位，无需单独处理。
 - **开发调试用软链**（改一处、处处生效），**分发用复制/克隆**（自包含）。
-- 需要 g++（本机已确认 g++ 14.x）；testlib 已 vendor 在 `vendor/testlib.h`，无需额外安装。
+- 需要 g++；testlib 已 vendor 在 `vendor/testlib.h`，无需额外安装。
 
 ### Claude Code
 
