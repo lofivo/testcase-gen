@@ -9,7 +9,7 @@ set -euo pipefail
 shopt -s nullglob
 
 CXX=${CXX:-g++}
-FLAGS="-std=c++17 -O2 -I work"
+FLAGS="-std=c++23 -O2 -I work"
 
 mkdir -p work/bin work/bin/wrong
 
