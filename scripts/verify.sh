@@ -21,8 +21,15 @@ WRONG="$BIN/wrong"
 mkdir -p "$DATA"
 
 echo "== [1/2] 生成数据 + 校验 + 标程出答案 =="
+# 双轨分流（见 ADR-0003）：work/gen.py 存在即 py轨，否则走 cpp轨 work/bin/gen。
+if [ -f work/gen.py ]; then
+  GEN_CMD="python3 work/gen.py"
+  echo "    py轨（cyaron）：python3 work/gen.py <tid>"
+else
+  GEN_CMD="$BIN/gen"
+fi
 for ((i=1; i<=N; i++)); do
-  "$BIN/gen" "$i" > "$DATA/$i.in"
+  $GEN_CMD "$i" > "$DATA/$i.in"
   if ! "$BIN/validator" < "$DATA/$i.in"; then
     echo "!! 校验失败：测试点 $i 的输入不合法" >&2
     exit 1

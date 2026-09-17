@@ -36,6 +36,7 @@
 - 安装就是**把整个目录放进 agent 的 skills 目录**，支撑文件（`templates/`、`scripts/`、`references/`、`vendor/`）随之就位，无需单独处理。
 - **开发调试用软链**（改一处、处处生效），**分发用复制/克隆**（自包含）。
 - 需要 g++；testlib 已 vendor 在 `vendor/testlib.h`，无需额外安装。
+- 图/树题可选 py 轨：需要 `python3` + `pip install cyaron`（建议锁版本）。
 
 ### Claude Code
 
@@ -101,8 +102,8 @@ skill 按 `SKILL.md` 里的流程执行：
 1. **读题面** → 抽取输入/输出格式、全局数据范围、测试点表、特殊性质。
 2. **读标程** → 定算法复杂度，决定大数据规模与卡暴力的目标。
 3. **定方案** → 题面指明测试点就照题面逐点映射；只给数据范围则默认 20 点（样例 / 中档常规 / 小边界 / 大满 `n` 四档），逐点定上限/性质/档位/针对的坑。
-4. **写生成器与校验器** → 填 `templates/` 模板；性质按 `references/property-to-code.md`「先构造、后扰动」。
-5. **编译 + 生成 + 自检** → `scripts/build.sh` 编译，`scripts/verify.sh` 生成数据、校验、标程出答案、跑错解自检。
+4. **写生成器与校验器** → 二选一填 `templates/` 模板：默认 cpp 轨 `gen.cpp`，图/树题可选 py 轨 `gen.py`（见 `references/cyaron-cheatsheet.md`，禁 `output_gen`）；性质按 `references/property-to-code.md`「先构造、后扰动」。
+5. **编译 + 生成 + 自检** → `scripts/build.sh` 分流编译（`work/gen.py` 存在即 py 轨），`scripts/verify.sh` 生成数据、校验、标程出答案、跑错解自检。
 6. **加固循环** → 有错解未被击败就针对它加数据，直到全部击败。
 7. **交付** → 产 `data/` 数据包 + `README.md` + 自检报告。
 
@@ -114,19 +115,22 @@ testcase-gen/
 ├── CONTEXT.md                      领域词汇表
 ├── docs/adr/                       决策记录
 │   ├── 0001-…-verification.md      错解自检（错解必须被击败）
-│   └── 0002-hybrid-architecture.md 混合架构
+│   ├── 0002-hybrid-architecture.md 混合架构
+│   └── 0003-dual-track-cyaron.md   双轨生成器（默认 testlib，图/树可选 cyaron）
 ├── vendor/testlib.h                testlib 单头文件（勿改）
 ├── templates/
-│   ├── gen.cpp                     生成器模板（registerGen + switch）
+│   ├── gen.cpp                     生成器模板 cpp 轨（registerGen + switch）
+│   ├── gen.py                      生成器模板 py 轨（cyaron，只写 .in，禁 output_gen）
 │   ├── validator.cpp               校验器模板（带上下界的 readInt）
 │   └── checker.cpp                 精确匹配 checker（逐 token）
 ├── scripts/
-│   ├── build.sh                    编译 gen/validator/checker/std/错解
-│   └── verify.sh                   生成 + 校验 + 出答案 + 错解自检 + 报告
+│   ├── build.sh                    分流编译（gen.py 存在即 py 轨）+ 编译 validator/checker/std/错解
+│   └── verify.sh                   生成 + 校验 + 出答案 + 错解自检 + 报告（双轨分流）
 └── references/                     规范（skill 运行时按需查阅）
     ├── property-to-code.md         特殊性质 → 生成代码 翻译规范
     ├── pitfall-checklist.md        坑点清单
-    └── anti-brute-force.md         大测点 / 卡暴力策略
+    ├── anti-brute-force.md         大测点 / 卡暴力策略
+    └── cyaron-cheatsheet.md        cyaron 速查（py 轨，仅图/树题）
 ```
 
 ## 术语

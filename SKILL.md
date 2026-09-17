@@ -22,18 +22,19 @@ wrong/              可选：错解目录，所有 .cpp 都要被数据击败（
 data/               测点：1.in…N.out
 README.md           测点说明（产物，见流程 11，位于题目根目录）
 verify-report.md    错解自检报告（产物，由 verify.sh 生成，位于题目根目录）
-work/               中间：gen/validator/checker 源码 + testlib.h + bin/
+work/               中间：gen（二选一：gen.cpp 或 gen.py）/validator/checker 源码 + testlib.h + bin/
 ```
 
 **skill 本体**（本目录）：
 ```
 vendor/testlib.h            testlib 单头文件（已 vendor，勿改）
-templates/{gen,validator,checker}.cpp   模板
-scripts/{build.sh,verify.sh}            编译 / 生成+自检
+templates/{gen.cpp,gen.py,validator.cpp,checker.cpp}   模板（生成器二选一）
+scripts/{build.sh,verify.sh}            编译 / 生成+自检（双轨分流）
 references/                 规范（按需查阅）
   property-to-code.md       特殊性质 → 生成代码 翻译规范
   pitfall-checklist.md      坑点清单（题面未指明测试点时驱动设点）
   anti-brute-force.md       大测点 / 卡暴力策略
+  cyaron-cheatsheet.md      cyaron 速查（py轨可选，仅图/树题）
 CONTEXT.md、docs/adr/       词汇表与决策记录
 ```
 
@@ -41,6 +42,7 @@ CONTEXT.md、docs/adr/       词汇表与决策记录
 
 1. `g++` 可用；`vendor/testlib.h` 存在。
 2. 题目工作目录里 `problem.md` 与 `std.cpp` 齐全；`wrong/` 可选。
+3. py轨（选用 `gen.py` 时）：`python3` 可用且可 `import cyaron`（`pip install cyaron`，建议锁版本并在题目 `README.md` 记录）。
 
 ## 流程（严格按序执行）
 
@@ -65,16 +67,20 @@ CONTEXT.md、docs/adr/       词汇表与决策记录
   - **小测试点**：边界 / 易错分支 / 退化结构（`n=1`、端点、全同·递增·递减、溢出、贪心冒充 DP 等）。
   - **大测试点**：满 `n`、最坏复杂度构造（卡暴力 TLE）。
 - 每个测点记录：编号 / 上限 / 性质（无表时标档位，如「样例」「测试数据/常规」「小/边界」「大/满 n」）/ 针对的坑 / 预期复杂度。这份记录就是后面题目根目录下 `README.md` 的底稿。
+- **选轨声明**：图/树等结构化强的题可选 py轨（cyaron `gen.py`），其余默认 cpp轨（testlib `gen.cpp`）；满 `n` 大数据优先 cpp轨。方案里写明“本题目用 x 轨，因为……”。
 
 ### 4. 准备 work/
 
 - 复制 `vendor/testlib.h` → `work/testlib.h`。
-- 复制 `templates/gen.cpp`、`templates/validator.cpp`、`templates/checker.cpp` → `work/`。
+- 复制 `templates/validator.cpp`、`templates/checker.cpp` → `work/`。
+- 生成器二选一：cpp轨复制 `templates/gen.cpp` → `work/`；py轨复制 `templates/gen.py` → `work/`（`work/gen.py` 存在即分流，两者同时存在时优先 py轨）。
 
-### 5. 写 gen.cpp
+### 5. 写生成器（cpp轨 gen.cpp / py轨 gen.py 二选一）
 
-按 `templates/gen.cpp` 的结构填写：
-- `switch (tid)` 里逐点/逐组设置参数（上限、`mode` 性质开关）。
+cpp轨按 `templates/gen.cpp` 的结构填写（`switch (tid)` 逐点设参，`rnd.*` 生成）；py轨按 `templates/gen.py` 填写（`if tid == ...` 逐点设参，`Graph.*` 出骨架，见 `references/cyaron-cheatsheet.md`）。**py轨硬约束**：只准 `print` 到 stdout 写 `.in`，禁 `IO.output_gen`（build 会拦截）；`random.seed(tid)` 保证可复现。
+
+以下两条对两轨相同：
+- 逐点/逐组设置参数（上限、`mode` 性质开关）：cpp轨在 `switch (tid)` 里，py轨在 `if tid == ...` 里。
 - 生成逻辑按性质翻译——**严格照 `references/property-to-code.md`**：先构造满足性质，再叠加随机扰动；性质组内也要覆盖该性质的边界。
 - 生成后，务必让每个 `.in` 都落在全局数据范围内。
 
@@ -87,7 +93,7 @@ CONTEXT.md、docs/adr/       词汇表与决策记录
 ```bash
 bash <skill>/scripts/build.sh
 ```
-编译 gen/validator/checker/std 及 `wrong/*.cpp`。若某个错解编译失败，看报错——可能是它自己写错，报告给用户，但不要因此中断（其余照常）。
+分流编译：cpp轨编译 gen/validator/checker/std 及 `wrong/*.cpp`；py轨校验 `python3` + `cyaron` 可用、`gen.py` 语法通过且无 `output_gen`，再编译 validator/checker/std 及 `wrong/*.cpp`。若某个错解编译失败，看报错——可能是它自己写错，报告给用户，但不要因此中断（其余照常）。
 
 ### 8. 生成 + 错解自检
 
@@ -105,7 +111,7 @@ bash <skill>/scripts/verify.sh <N> [TL_ms]
 - 有错解**未被击败**（全部 AC）→ 数据太弱，必须加固：
   - 错解是**假算法**（应被 WA）：读该错解代码，定位它错在哪一步（贪心/特判/漏情况），按 `references/pitfall-checklist.md` 构造能戳穿它的数据，新增或替换测点。
   - 错解是**暴力**（应被 TLE）：按 `references/anti-brute-force.md` 加大规模或加强对抗性构造。
-  - 改完回到第 5 步重写 `gen.cpp`（或调参），再走 7→8。
+  - 改完回到第 5 步重写生成器（`gen.cpp` 或 `gen.py`，或调参），再走 7→8。
 - **全部击败** → 进入第 10 步。
 - 若 `wrong/` 为空：跳过错解自检，但仍要出大数据点防暴力（按题面最大 `n`）。
 
@@ -117,6 +123,7 @@ bash <skill>/scripts/verify.sh <N> [TL_ms]
 
 在题目根目录的 `README.md` 汇总（底稿来自第 3 步的记录）：
 - 每个测点：编号 / 变量上限 / 特殊性质 / 针对的坑 / 预期复杂度。
+- 所用生成轨（cpp/testlib 或 py/cyaron + cyaron 版本号）。
 - 错解自检摘要（来自 `verify-report.md`）：每个错解被哪些点、以何种方式（WA/TLE/RE）击败。
 
 ### 12. 交付
@@ -132,4 +139,5 @@ bash <skill>/scripts/verify.sh <N> [TL_ms]
 - **大数据防暴力**：满 `n` 点必出，且构造最坏输入而非纯随机，见 `references/anti-brute-force.md`。
 - **坑点覆盖**：边界、溢出（`long long`）、负值/零、退化结构、贪心冒充 DP，见 `references/pitfall-checklist.md`。
 - **判定口径**：错解只要在任一测点非 AC 即「被击败」；暴力被 TLE 击败、假算法被 WA 击败，两者都要有（见 `docs/adr/0001`）。
-- **可复现**：testlib `registerGen` 保证同一 seed 同一输出；不要引入无 seed 的随机源。
+- **可复现**：testlib `registerGen` 保证同一 seed 同一输出；py轨用 `random.seed(tid)` 对等保证。不要引入无 seed 的随机源。
+- **py轨禁 output_gen**：cyaron 只准写 `.in` 到 stdout；`.out` 仍由 `verify.sh` 统一调 `std` 产出（见 `docs/adr/0003`）。
