@@ -10,7 +10,8 @@ description: 给定题目 markdown 题面与 C++ 标程 std.cpp，生成信息�
 ## 何时用 / 不适用
 
 - 适用：标准输入/输出题，唯一解、精确匹配答案。
-- 不适用（v1 外）：交互题、SPJ（「输出任意一种合法方案」）、提交答案题。遇到这类题先告知用户暂不支持。
+- 不适用（始终排除）：交互题、提交答案题（改的是「谁产生输出」的链路，不是判题一环）。遇到这类题先告知用户暂不支持。
+- SPJ（特殊评测）题**在范围内**：多解/任意合法方案、浮点误差、输出合法性须程序验证三类；详见「SPJ 判定」小节。
 
 ## 目录约定
 
@@ -28,13 +29,14 @@ work/               中间：gen（二选一：gen.cpp 或 gen.py）/validator/c
 **skill 本体**（本目录）：
 ```
 vendor/testlib.h            testlib 单头文件（已 vendor，勿改）
-templates/{gen.cpp,gen.py,validator.cpp,checker.cpp}   模板（生成器二选一）
+templates/{gen.cpp,gen.py,validator.cpp,checker.cpp,spj.cpp}   模板（生成器二选一；spj.cpp 为 SPJ 判题器骨架）
 scripts/{build.sh,verify.sh}            编译 / 生成+自检（双轨分流）
 references/                 规范（按需查阅）
   property-to-code.md       特殊性质 → 生成代码 翻译规范
   pitfall-checklist.md      坑点清单（题面未指明测试点时驱动设点）
   anti-brute-force.md       大测点 / 卡暴力策略
   cyaron-cheatsheet.md      cyaron 速查（py轨可选，仅图/树题）
+  spj-guide.md              SPJ 判题器写法 + 两步自检（SPJ 题必读）
 CONTEXT.md、docs/adr/       词汇表与决策记录
 ```
 
@@ -72,7 +74,7 @@ CONTEXT.md、docs/adr/       词汇表与决策记录
 ### 4. 准备 work/
 
 - 复制 `vendor/testlib.h` → `work/testlib.h`。
-- 复制 `templates/validator.cpp`、`templates/checker.cpp` → `work/`。
+- 复制 `templates/validator.cpp`、`templates/checker.cpp` → `work/`；若为 SPJ 题，改为复制 `templates/spj.cpp` → `work/checker.cpp`（读 `references/spj-guide.md`，按题面选写法）。
 - 生成器二选一：cpp轨复制 `templates/gen.cpp` → `work/`；py轨复制 `templates/gen.py` → `work/`（`work/gen.py` 存在即分流，两者同时存在时优先 py轨）。
 
 ### 5. 写生成器（cpp轨 gen.cpp / py轨 gen.py 二选一）
@@ -94,6 +96,16 @@ cpp轨按 `templates/gen.cpp` 的结构填写（`switch (tid)` 逐点设参，`r
 bash <skill>/scripts/build.sh
 ```
 分流编译：cpp轨编译 gen/validator/checker/std 及 `wrong/*.cpp`；py轨校验 `python3` + `cyaron` 可用、`gen.py` 语法通过且无 `output_gen`，再编译 validator/checker/std 及 `wrong/*.cpp`。若某个错解编译失败，看报错——可能是它自己写错，报告给用户，但不要因此中断（其余照常）。
+
+### SPJ 判定
+
+题面属下列之一即 SPJ 题：**多解/任意合法方案**、**浮点误差**、**输出合法性须程序验证**。判定者仍是 `work/checker.cpp`（testlib 三参：`<in> <out> <ans>`），`build.sh`/`verify.sh` 链路零改动；差别仅在 checker 逻辑：
+
+- **来源**：默认 LLM 按题面写（骨架 `templates/spj.cpp` + `references/spj-guide.md`）；用户自带 checker 则直接采用并验证其为 testlib 三参接口。
+- **std/.out**：SPJ 题仍必须有 `std.cpp`，`.out` 照常由 verify.sh 产出，作参考基线；但 checker **不**要求选手输出与 `.out` 逐字一致——`.out` 只是 std 给出的一种合法方案。
+- **浮点 epsilon**：严格按题面声明；题面未写容差则不启用浮点比较（题面是唯一权威）。
+- **两步自检（强制）**：写完 checker 后，(1) 用 std 的 `.out` 跑 checker → 必须 AC；(2) 构造至少一个非法/错误输出 → 必须 WA，且非法样例应含「格式合法但语义错」的输出，不只测空输出。防止 checker 过松（全 AC）或过紧（全 WA）。
+- **错解自检**：口径不变（ADR-0001）；只需确认错解在 SPJ checker 下拿到 WA 而非 checker 崩溃导致的 RE。
 
 ### 8. 生成 + 错解自检
 

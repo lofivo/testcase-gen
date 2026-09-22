@@ -116,13 +116,15 @@ testcase-gen/
 ├── docs/adr/                       决策记录
 │   ├── 0001-…-verification.md      错解自检（错解必须被击败）
 │   ├── 0002-hybrid-architecture.md 混合架构
-│   └── 0003-dual-track-cyaron.md   双轨生成器（默认 testlib，图/树可选 cyaron）
+│   ├── 0003-dual-track-cyaron.md   双轨生成器（默认 testlib，图/树可选 cyaron）
+│   └── 0004-spj-integration.md     SPJ 接入（题面特定判题器 + 骨架）
 ├── vendor/testlib.h                testlib 单头文件（勿改）
 ├── templates/
 │   ├── gen.cpp                     生成器模板 cpp 轨（registerGen + switch）
 │   ├── gen.py                      生成器模板 py 轨（cyaron，只写 .in，禁 output_gen）
 │   ├── validator.cpp               校验器模板（带上下界的 readInt）
-│   └── checker.cpp                 精确匹配 checker（逐 token）
+│   ├── checker.cpp                 精确匹配判题器（逐 token）
+│   └── spj.cpp                     SPJ 判题器骨架（多解/浮点/结构验证三选一）
 ├── scripts/
 │   ├── build.sh                    分流编译（gen.py 存在即 py 轨）+ 编译 validator/checker/std/错解
 │   └── verify.sh                   生成 + 校验 + 出答案 + 错解自检 + 报告（双轨分流）
@@ -130,7 +132,8 @@ testcase-gen/
     ├── property-to-code.md         特殊性质 → 生成代码 翻译规范
     ├── pitfall-checklist.md        坑点清单
     ├── anti-brute-force.md         大测点 / 卡暴力策略
-    └── cyaron-cheatsheet.md        cyaron 速查（py 轨，仅图/树题）
+    ├── cyaron-cheatsheet.md        cyaron 速查（py 轨，仅图/树题）
+    └── spj-guide.md                SPJ 判题器写法与两步自检
 ```
 
 ## 术语
@@ -141,10 +144,10 @@ testcase-gen/
 - **错解 `wrong/`**：一切不该 AC 的解法，统一放这里——假算法（贪心冒充 DP）与暴力（`bf.cpp`）都在内。
 - **两种击败方式**：暴力被 **TLE** 击败（数据够大）、假算法被 **WA** 击败（数据戳中它的错）。二者都要有。
 
-## 当前边界（v1）
+## 当前边界
 
-- 仅标准输入/输出题、唯一解精确匹配。
-- 暂不支持：交互题、SPJ（「输出任意一种合法方案」）、提交答案题。
+- 标准输入/输出题：唯一解精确匹配（默认 `checker.cpp`），或 SPJ 判题器（多解/浮点/输出合法性验证，见 SKILL.md「SPJ 判定」）。
+- 暂不支持：交互题、提交答案题。
 
 ## License
 

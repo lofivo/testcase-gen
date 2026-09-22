@@ -1,11 +1,12 @@
-// 精确匹配 checker —— 逐 token 比较，一般无需改动
+// 精确匹配判题器 —— 逐 token 比较，一般无需改动
 //
 // 用法：  ./checker  <输入> <标准答案 out> <选手输出>
 //        argv[1]=输入  argv[2]=标准答案(ans)  argv[3]=选手输出(ouf)
 //        退出码 0 = AC（一致），非 0 = WA。
 //
-// 注意：这是「唯一解、精确匹配」型 checker（v1 范围）。
-//       「输出任意一种合法方案」的 SPJ 型题目不在 v1 内，届时需另写 checker。
+// 注意：这是「唯一解、精确匹配」型判题器（默认路径）。
+//       SPJ 题（多解/浮点/输出合法性验证）改用 spj.cpp 骨架：
+//       复制 templates/spj.cpp → work/checker.cpp，并读 references/spj-guide.md。
 
 #include "testlib.h"
 

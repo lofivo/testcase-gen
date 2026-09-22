@@ -41,6 +41,14 @@ _Avoid_: 朴素解、naive
 **校验器（Validator）**:
 校验 `.in` 满足数据范围与特殊性质的程序。
 
+**判题器（Checker）**:
+判定选手输出相对标准答案对错的程序；入参固定 `<in> <out> <ans>`，基于 testlib，产物为 AC/WA。
+_Avoid_: SPJ checker、special judge（那是其子类）
+
+**特殊评测（SPJ）**:
+判题器的一类：验证选手输出本身合法（多解任一合法方案、浮点误差内一致），而非与参考答案逐字相同。
+_Avoid_: special judge、多解题判题
+
 **错解自检（Discrimination Check）**:
 逐个运行 `wrong/` 里的错解，确认每个都被至少一个测点击败（WA/TLE/RE），未击败则加固数据。
 
